@@ -235,19 +235,27 @@ namespace canopen_master
         }
 
         /** Get the currently known value for the given object */
-        template<typename T>
-        T get(uint16_t objectId, uint8_t subId) const
+        template <typename T> T get(uint16_t objectId, uint8_t subId) const
         {
             uint8_t data[4];
             uint16_t size = get(objectId, subId, data, 4);
             if (size == 0)
-                throw ObjectNotRead("attempting to get an object that has never been read");
+                throw ObjectNotRead(
+                    "attempting to get an object that has never been read");
 
             const ObjectValue& object =
                 dictionary.find(ObjectIdentifier(objectId, subId))->second;
             if (size != sizeof(T) && object.knownSize) {
-                throw InvalidObjectType("unexpected requested object size in get");
-            } else if (!object.knownSize) {
+                throw InvalidObjectType("get(" + std::to_string(objectId) + ":" +
+                                        std::to_string(subId) +
+                                        ") "
+                                        "called with a type of size " +
+                                        std::to_string(sizeof(T)) +
+                                        " but "
+                                        "expected " +
+                                        std::to_string(size));
+            }
+            else if (!object.knownSize) {
                 object.size = sizeof(T);
                 object.knownSize = true;
             }
